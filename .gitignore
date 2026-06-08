@@ -1,0 +1,22 @@
+node_modules
+dist
+dist-ssr
+*.local
+tsconfig.tsbuildinfo
+
+# Client source spreadsheet — contains real financial data, keep out of the repo
+logistics - eli.xlsx
+*.xlsx
+.env
+.env.*.local
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
