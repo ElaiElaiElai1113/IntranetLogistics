@@ -1,7 +1,9 @@
 import { useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { useProjects } from '../hooks/useProjects'
 import { computeFinancials } from '../lib/calculations'
 import { formatPHP, formatPercent } from '../lib/formatters'
+import { buildProjectOverviewRows } from '../lib/projectOverviewRows'
 import StatCard from './StatCard'
 
 export default function Dashboard() {
@@ -39,6 +41,8 @@ export default function Dashboard() {
     }
   }, [active])
 
+  const overviewRows = useMemo(() => buildProjectOverviewRows(active), [active])
+
   if (!configured) {
     return (
       <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 text-amber-800">
@@ -68,26 +72,132 @@ export default function Dashboard() {
       )}
 
       {loading ? (
-        <p className="text-gray-400">Loading…</p>
+        <p className="text-gray-400">Loading...</p>
       ) : (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <StatCard label="Active Projects" value={String(summary.count)} />
-          <StatCard label="Total Capital Invested" value={formatPHP(summary.capital)} />
-          <StatCard label="Total Revenue" value={formatPHP(summary.revenue)} />
-          <StatCard label="Total Cost" value={formatPHP(summary.cost)} />
-          <StatCard
-            label="Total Profit"
-            value={formatPHP(summary.profit)}
-            accent={summary.profit >= 0 ? 'positive' : 'negative'}
-          />
-          <StatCard label="Average ROI" value={formatPercent(summary.avgRoi)} />
-          <StatCard
-            label="Best ROI Project"
-            value={summary.best ? summary.best.name : '—'}
-            hint={summary.best ? formatPercent(summary.best.roi) : undefined}
-          />
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            <StatCard label="Active Projects" value={String(summary.count)} />
+            <StatCard label="Total Capital Invested" value={formatPHP(summary.capital)} />
+            <StatCard label="Total Revenue" value={formatPHP(summary.revenue)} />
+            <StatCard label="Total Cost" value={formatPHP(summary.cost)} />
+            <StatCard
+              label="Total Profit"
+              value={formatPHP(summary.profit)}
+              accent={summary.profit >= 0 ? 'positive' : 'negative'}
+            />
+            <StatCard label="Average ROI" value={formatPercent(summary.avgRoi)} />
+            <StatCard
+              label="Best ROI Project"
+              value={summary.best ? summary.best.name : '-'}
+              hint={summary.best ? formatPercent(summary.best.roi) : undefined}
+            />
+          </div>
+
+          <section className="rounded-xl border border-gray-200 bg-white">
+            <div className="border-b border-gray-200 px-5 py-4">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-400">
+                All Projects
+              </h2>
+            </div>
+
+            {overviewRows.length === 0 ? (
+              <p className="px-5 py-6 text-sm text-gray-400">No active projects yet.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="min-w-[1050px] divide-y divide-gray-200 text-sm">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <TableHead>Project</TableHead>
+                      <TableHead>Start Date</TableHead>
+                      <TableHead align="right">Capital</TableHead>
+                      <TableHead align="right">Revenue</TableHead>
+                      <TableHead align="right">Cost %</TableHead>
+                      <TableHead align="right">Split %</TableHead>
+                      <TableHead align="right">Total Cost</TableHead>
+                      <TableHead align="right">Profit</TableHead>
+                      <TableHead align="right">ROI</TableHead>
+                      <TableHead align="right">Final Amount</TableHead>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 bg-white">
+                    {overviewRows.map((row) => (
+                      <tr key={row.id} className="hover:bg-gray-50">
+                        <td className="max-w-[220px] px-4 py-3">
+                          <Link
+                            to={`/projects/${row.id}`}
+                            className="font-semibold text-blue-600 hover:underline"
+                          >
+                            {row.projectName}
+                          </Link>
+                        </td>
+                        <TableCell>{row.startDate}</TableCell>
+                        <TableCell align="right">{row.capitalInvested}</TableCell>
+                        <TableCell align="right">{row.revenue}</TableCell>
+                        <TableCell align="right">{row.costPercentage}</TableCell>
+                        <TableCell align="right">{row.splitPercentage}</TableCell>
+                        <TableCell align="right">{row.totalCost}</TableCell>
+                        <TableCell align="right" tone={row.profitTone}>
+                          {row.profit}
+                        </TableCell>
+                        <TableCell align="right" tone={row.profitTone}>
+                          {row.roi}
+                        </TableCell>
+                        <TableCell align="right">{row.finalAmount}</TableCell>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
         </div>
       )}
     </div>
+  )
+}
+
+function TableHead({
+  children,
+  align = 'left',
+}: {
+  children: React.ReactNode
+  align?: 'left' | 'right'
+}) {
+  return (
+    <th
+      scope="col"
+      className={`px-4 py-3 text-xs font-semibold uppercase tracking-wide text-gray-500 ${
+        align === 'right' ? 'text-right' : 'text-left'
+      }`}
+    >
+      {children}
+    </th>
+  )
+}
+
+function TableCell({
+  children,
+  align = 'left',
+  tone = 'default',
+}: {
+  children: React.ReactNode
+  align?: 'left' | 'right'
+  tone?: 'default' | 'positive' | 'negative'
+}) {
+  const toneClass =
+    tone === 'positive'
+      ? 'text-green-600'
+      : tone === 'negative'
+        ? 'text-red-600'
+        : 'text-gray-700'
+
+  return (
+    <td
+      className={`whitespace-nowrap px-4 py-3 font-medium ${toneClass} ${
+        align === 'right' ? 'text-right' : 'text-left'
+      }`}
+    >
+      {children}
+    </td>
   )
 }

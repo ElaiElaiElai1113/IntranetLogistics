@@ -4,6 +4,7 @@ import type { Project, ProjectStatus } from '../types/project'
 import { getProject, updateProject, archiveProject } from '../lib/projects'
 import { computeFinancials } from '../lib/calculations'
 import { formatPHP, formatPercent } from '../lib/formatters'
+import { buildProjectInfoRows } from '../lib/projectInfoRows'
 import { useProjects } from '../hooks/useProjects'
 
 interface FormState {
@@ -69,6 +70,11 @@ export default function ProjectDetail() {
       cost_percentage: Number(form.cost_percentage),
       split_percentage: Number(form.split_percentage),
     })
+  }, [form])
+
+  const infoRows = useMemo(() => {
+    if (!form) return []
+    return buildProjectInfoRows(form)
   }, [form])
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
@@ -147,7 +153,7 @@ export default function ProjectDetail() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-3">
         {/* Editable inputs */}
         <section className="rounded-xl border border-gray-200 bg-white p-6">
           <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-400">
@@ -208,6 +214,18 @@ export default function ProjectDetail() {
               />
             </Field>
           </div>
+        </section>
+
+        {/* Read-only source information */}
+        <section className="rounded-xl border border-gray-200 bg-white p-6">
+          <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-400">
+            Information
+          </h2>
+          <dl className="space-y-3">
+            {infoRows.map((row) => (
+              <InfoRow key={row.label} label={row.label} value={row.value} />
+            ))}
+          </dl>
         </section>
 
         {/* Calculated, read-only figures */}
@@ -330,6 +348,15 @@ function CalcRow({
       <dd className={`${emphasize ? 'text-lg font-bold' : 'font-medium'} ${accentClass}`}>
         {value}
       </dd>
+    </div>
+  )
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="border-b border-gray-100 pb-3 last:border-b-0 last:pb-0">
+      <dt className="text-xs font-semibold uppercase tracking-wide text-gray-400">{label}</dt>
+      <dd className="mt-1 break-words text-sm font-medium text-gray-900">{value}</dd>
     </div>
   )
 }
