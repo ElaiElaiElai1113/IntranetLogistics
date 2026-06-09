@@ -103,7 +103,7 @@ export default function Dashboard() {
             {overviewRows.length === 0 ? (
               <p className="px-5 py-6 text-sm text-gray-400">No active projects yet.</p>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="hidden overflow-x-auto md:block">
                 <table className="min-w-[1050px] divide-y divide-gray-200 text-sm">
                   <thead className="bg-gray-50">
                     <tr>
@@ -149,6 +149,39 @@ export default function Dashboard() {
                 </table>
               </div>
             )}
+
+            {/* Mobile: tappable cards instead of the wide table */}
+            {overviewRows.length > 0 && (
+              <ul className="divide-y divide-gray-100 md:hidden">
+                {overviewRows.map((row) => (
+                  <li key={row.id}>
+                    <Link
+                      to={`/projects/${row.id}`}
+                      className="block px-4 py-4 transition-colors active:bg-gray-50"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <span className="font-semibold text-blue-600">{row.projectName}</span>
+                        <span className="shrink-0 text-xs text-gray-400">{row.startDate}</span>
+                      </div>
+                      <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3">
+                        <MobileStat label="Capital" value={row.capitalInvested} />
+                        <MobileStat label="Revenue" value={row.revenue} />
+                        <MobileStat label="Profit" value={row.profit} tone={row.profitTone} />
+                        <MobileStat label="ROI" value={row.roi} tone={row.profitTone} />
+                      </div>
+                      <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-3">
+                        <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">
+                          Final Amount
+                        </span>
+                        <span className="text-base font-bold text-gray-900">
+                          {row.finalAmount}
+                        </span>
+                      </div>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
         </div>
       )}
@@ -172,6 +205,29 @@ function TableHead({
     >
       {children}
     </th>
+  )
+}
+
+function MobileStat({
+  label,
+  value,
+  tone = 'default',
+}: {
+  label: string
+  value: string
+  tone?: 'default' | 'positive' | 'negative'
+}) {
+  const toneClass =
+    tone === 'positive'
+      ? 'text-green-600'
+      : tone === 'negative'
+        ? 'text-red-600'
+        : 'text-gray-900'
+  return (
+    <div className="min-w-0">
+      <p className="text-xs font-medium uppercase tracking-wide text-gray-400">{label}</p>
+      <p className={`mt-0.5 break-words text-sm font-semibold ${toneClass}`}>{value}</p>
+    </div>
   )
 }
 

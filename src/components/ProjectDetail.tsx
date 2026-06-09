@@ -253,12 +253,12 @@ export default function ProjectDetail() {
         </section>
       </div>
 
-      <div className="mt-6 flex items-center gap-3">
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center">
         <button
           type="button"
           onClick={handleSave}
           disabled={saving || !form.project_name.trim()}
-          className="rounded-md bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+          className="w-full rounded-md bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50 sm:w-auto"
         >
           {saving ? 'Saving…' : 'Save'}
         </button>
