@@ -118,7 +118,7 @@ export default function ProjectForm({ onClose }: { onClose: () => void }) {
           <div className="grid grid-cols-2 gap-4">
             <label className="block">
               <span className="mb-1 block text-sm font-medium text-gray-700">
-                Capital (₱)
+                Capital Invested (₱)
               </span>
               <input
                 type="number"
@@ -130,7 +130,7 @@ export default function ProjectForm({ onClose }: { onClose: () => void }) {
             </label>
             <label className="block">
               <span className="mb-1 block text-sm font-medium text-gray-700">
-                Revenue (₱)
+                Projected Revenue (₱)
               </span>
               <input
                 type="number"

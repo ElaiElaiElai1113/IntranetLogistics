@@ -15,8 +15,7 @@ export default function Dashboard() {
         const fin = computeFinancials(p)
         acc.capital += p.capital_invested
         acc.revenue += p.revenue
-        acc.cost += fin.totalCost
-        acc.profit += fin.profit
+        acc.profit += fin.splitAmount
         acc.roiSum += fin.roi
         if (!acc.best || fin.roi > acc.best.roi) {
           acc.best = { name: p.project_name, roi: fin.roi }
@@ -26,7 +25,6 @@ export default function Dashboard() {
       {
         capital: 0,
         revenue: 0,
-        cost: 0,
         profit: 0,
         roiSum: 0,
         best: null as { name: string; roi: number } | null,
@@ -78,10 +76,9 @@ export default function Dashboard() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <StatCard label="Active Projects" value={String(summary.count)} />
             <StatCard label="Total Capital Invested" value={formatPHP(summary.capital)} />
-            <StatCard label="Total Revenue" value={formatPHP(summary.revenue)} />
-            <StatCard label="Total Cost" value={formatPHP(summary.cost)} />
+            <StatCard label="Projected Revenue" value={formatPHP(summary.revenue)} />
             <StatCard
-              label="Total Profit"
+              label="Total Profit Split"
               value={formatPHP(summary.profit)}
               accent={summary.profit >= 0 ? 'positive' : 'negative'}
             />
@@ -104,19 +101,19 @@ export default function Dashboard() {
               <p className="px-5 py-6 text-sm text-gray-400">No active projects yet.</p>
             ) : (
               <div className="hidden overflow-x-auto md:block">
-                <table className="min-w-[1050px] divide-y divide-gray-200 text-sm">
+                <table className="min-w-[1150px] divide-y divide-gray-200 text-sm">
                   <thead className="bg-gray-50">
                     <tr>
                       <TableHead>Project</TableHead>
                       <TableHead>Start Date</TableHead>
-                      <TableHead align="right">Capital</TableHead>
-                      <TableHead align="right">Revenue</TableHead>
-                      <TableHead align="right">Cost %</TableHead>
-                      <TableHead align="right">Split %</TableHead>
-                      <TableHead align="right">Total Cost</TableHead>
-                      <TableHead align="right">Profit</TableHead>
+                      <TableHead align="right">Days Active</TableHead>
+                      <TableHead>Expected Completion</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead align="right">Capital Invested</TableHead>
+                      <TableHead align="right">Projected Revenue</TableHead>
+                      <TableHead align="right">Profit Split</TableHead>
                       <TableHead align="right">ROI</TableHead>
-                      <TableHead align="right">Final Amount</TableHead>
+                      <TableHead align="right">Total Return</TableHead>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 bg-white">
@@ -131,18 +128,20 @@ export default function Dashboard() {
                           </Link>
                         </td>
                         <TableCell>{row.startDate}</TableCell>
+                        <TableCell align="right">{row.daysActive}</TableCell>
+                        <TableCell>{row.expectedCompletionDate}</TableCell>
+                        <td className="whitespace-nowrap px-4 py-3">
+                          <StatusPill label={row.timelineStatus} tone={row.timelineTone} />
+                        </td>
                         <TableCell align="right">{row.capitalInvested}</TableCell>
-                        <TableCell align="right">{row.revenue}</TableCell>
-                        <TableCell align="right">{row.costPercentage}</TableCell>
-                        <TableCell align="right">{row.splitPercentage}</TableCell>
-                        <TableCell align="right">{row.totalCost}</TableCell>
+                        <TableCell align="right">{row.projectedRevenue}</TableCell>
                         <TableCell align="right" tone={row.profitTone}>
-                          {row.profit}
+                          {row.profitSplit}
                         </TableCell>
                         <TableCell align="right" tone={row.profitTone}>
                           {row.roi}
                         </TableCell>
-                        <TableCell align="right">{row.finalAmount}</TableCell>
+                        <TableCell align="right">{row.totalReturn}</TableCell>
                       </tr>
                     ))}
                   </tbody>
@@ -164,18 +163,27 @@ export default function Dashboard() {
                         <span className="shrink-0 text-xs text-gray-400">{row.startDate}</span>
                       </div>
                       <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3">
+                        <MobileStat label="Days Active" value={row.daysActive} />
+                        <MobileStat label="Expected" value={row.expectedCompletionDate} />
                         <MobileStat label="Capital" value={row.capitalInvested} />
-                        <MobileStat label="Revenue" value={row.revenue} />
-                        <MobileStat label="Profit" value={row.profit} tone={row.profitTone} />
+                        <MobileStat label="Projected Revenue" value={row.projectedRevenue} />
+                        <MobileStat
+                          label="Profit Split"
+                          value={row.profitSplit}
+                          tone={row.profitTone}
+                        />
                         <MobileStat label="ROI" value={row.roi} tone={row.profitTone} />
                       </div>
                       <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-3">
-                        <span className="text-xs font-semibold uppercase tracking-wide text-gray-400">
-                          Final Amount
-                        </span>
-                        <span className="text-base font-bold text-gray-900">
-                          {row.finalAmount}
-                        </span>
+                        <StatusPill label={row.timelineStatus} tone={row.timelineTone} />
+                        <div className="text-right">
+                          <span className="block text-xs font-semibold uppercase tracking-wide text-gray-400">
+                            Total Return
+                          </span>
+                          <span className="text-base font-bold text-gray-900">
+                            {row.totalReturn}
+                          </span>
+                        </div>
                       </div>
                     </Link>
                   </li>
@@ -186,6 +194,31 @@ export default function Dashboard() {
         </div>
       )}
     </div>
+  )
+}
+
+function StatusPill({
+  label,
+  tone,
+}: {
+  label: string
+  tone: 'positive' | 'warning' | 'negative' | 'muted'
+}) {
+  const toneClass =
+    tone === 'positive'
+      ? 'bg-green-50 text-green-700 ring-green-200'
+      : tone === 'warning'
+        ? 'bg-amber-50 text-amber-700 ring-amber-200'
+        : tone === 'negative'
+          ? 'bg-red-50 text-red-700 ring-red-200'
+          : 'bg-gray-50 text-gray-600 ring-gray-200'
+
+  return (
+    <span
+      className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-semibold ring-1 ${toneClass}`}
+    >
+      {label}
+    </span>
   )
 }
 
