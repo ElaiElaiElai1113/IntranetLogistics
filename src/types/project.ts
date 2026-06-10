@@ -48,3 +48,31 @@ export interface Financials {
   roi: number
   finalAmount: number
 }
+
+export interface ProjectCapitalEntry {
+  id: string
+  project_id: string
+  amount: number
+  note: string | null
+  updated_by: string
+  created_at: string
+}
+
+export interface ProjectAuditLog {
+  id: string
+  project_id: string
+  updated_by: string
+  action: string
+  details: string
+  created_at: string
+}
+
+export interface AddCapitalInput {
+  amount: number
+  updated_by: string
+  note?: string | null
+}
+
+export interface AuditMetadata {
+  updated_by: string
+}

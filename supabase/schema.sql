@@ -33,3 +33,31 @@ values
   ('Dignity Advocacy',   '2026-04-15', 389800,  783800, 10, 50, ''),
   ('Surgical Equipment', '2026-05-15', 725000, 1554195, 10, 50, ''),
   ('Breast Moulds',      '2026-02-25',  96000,  179000, 10, 50, '');
+
+create table if not exists project_capital_entries (
+  id uuid primary key default gen_random_uuid(),
+  project_id uuid not null references projects(id) on delete cascade,
+  amount numeric not null check (amount > 0),
+  note text,
+  updated_by text not null default '',
+  created_at timestamp with time zone default now()
+);
+
+create index if not exists project_capital_entries_project_id_created_at_idx
+  on project_capital_entries(project_id, created_at desc);
+
+alter table project_capital_entries disable row level security;
+
+create table if not exists project_audit_logs (
+  id uuid primary key default gen_random_uuid(),
+  project_id uuid not null references projects(id) on delete cascade,
+  updated_by text not null default '',
+  action text not null,
+  details text not null,
+  created_at timestamp with time zone default now()
+);
+
+create index if not exists project_audit_logs_project_id_created_at_idx
+  on project_audit_logs(project_id, created_at desc);
+
+alter table project_audit_logs disable row level security;
