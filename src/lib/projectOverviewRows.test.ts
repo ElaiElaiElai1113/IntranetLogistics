@@ -36,7 +36,6 @@ describe('buildProjectOverviewRows', () => {
         profitSplit: '₱29,100.00',
         profitTone: 'positive',
         roi: '33.9%',
-        totalReturn: '₱114,900.00',
       },
     ])
   })
@@ -57,7 +56,6 @@ describe('buildProjectOverviewRows', () => {
       profitSplit: '-₱5,000.00',
       profitTone: 'negative',
       roi: '-50.0%',
-      totalReturn: '₱5,000.00',
     })
   })
 

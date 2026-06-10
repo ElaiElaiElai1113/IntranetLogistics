@@ -113,7 +113,6 @@ export default function Dashboard() {
                       <TableHead align="right">Projected Revenue</TableHead>
                       <TableHead align="right">Profit Split</TableHead>
                       <TableHead align="right">ROI</TableHead>
-                      <TableHead align="right">Total Return</TableHead>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 bg-white">
@@ -141,7 +140,6 @@ export default function Dashboard() {
                         <TableCell align="right" tone={row.profitTone}>
                           {row.roi}
                         </TableCell>
-                        <TableCell align="right">{row.totalReturn}</TableCell>
                       </tr>
                     ))}
                   </tbody>
@@ -174,16 +172,8 @@ export default function Dashboard() {
                         />
                         <MobileStat label="ROI" value={row.roi} tone={row.profitTone} />
                       </div>
-                      <div className="mt-3 flex items-center justify-between border-t border-gray-100 pt-3">
+                      <div className="mt-3 border-t border-gray-100 pt-3">
                         <StatusPill label={row.timelineStatus} tone={row.timelineTone} />
-                        <div className="text-right">
-                          <span className="block text-xs font-semibold uppercase tracking-wide text-gray-400">
-                            Total Return
-                          </span>
-                          <span className="text-base font-bold text-gray-900">
-                            {row.totalReturn}
-                          </span>
-                        </div>
                       </div>
                     </Link>
                   </li>

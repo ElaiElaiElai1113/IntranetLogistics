@@ -21,7 +21,6 @@ export interface ProjectOverviewRow {
   profitSplit: string
   profitTone: 'positive' | 'negative'
   roi: string
-  totalReturn: string
 }
 
 function sortByStartDate(projects: Project[]): Project[] {
@@ -57,7 +56,6 @@ export function buildProjectOverviewRows(
       profitSplit: formatPHP(financials.splitAmount),
       profitTone: financials.splitAmount >= 0 ? 'positive' : 'negative',
       roi: formatPercent(financials.roi),
-      totalReturn: formatPHP(financials.finalAmount),
     }
   })
 }

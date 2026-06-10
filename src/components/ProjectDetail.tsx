@@ -23,6 +23,8 @@ interface FormState {
   status: ProjectStatus
 }
 
+const SYSTEM_UPDATED_BY = 'System'
+
 function toFormState(p: Project): FormState {
   return {
     project_name: p.project_name,
@@ -46,7 +48,6 @@ export default function ProjectDetail() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [savedAt, setSavedAt] = useState<number | null>(null)
-  const [updatedBy, setUpdatedBy] = useState('')
   const [auditLogs, setAuditLogs] = useState<ProjectAuditLog[]>([])
   const [capitalAmount, setCapitalAmount] = useState('')
   const [capitalNote, setCapitalNote] = useState('')
@@ -106,10 +107,6 @@ export default function ProjectDetail() {
 
   async function handleSave() {
     if (!id || !form) return
-    if (!updatedBy.trim()) {
-      setError('Updated by is required.')
-      return
-    }
 
     setSaving(true)
     setError(null)
@@ -126,7 +123,7 @@ export default function ProjectDetail() {
           notes: form.notes || null,
           status: form.status,
         },
-        { updated_by: updatedBy },
+        { updated_by: SYSTEM_UPDATED_BY },
       )
       await refresh()
       await refreshProjectDetail()
@@ -140,15 +137,11 @@ export default function ProjectDetail() {
 
   async function handleArchive() {
     if (!id) return
-    if (!updatedBy.trim()) {
-      setError('Updated by is required.')
-      return
-    }
 
     setSaving(true)
     setError(null)
     try {
-      await updateProjectWithAudit(id, { status: 'archived' }, { updated_by: updatedBy })
+      await updateProjectWithAudit(id, { status: 'archived' }, { updated_by: SYSTEM_UPDATED_BY })
       await refresh()
       navigate('/')
     } catch (err) {
@@ -159,10 +152,6 @@ export default function ProjectDetail() {
 
   async function handleAddCapital() {
     if (!id) return
-    if (!updatedBy.trim()) {
-      setError('Updated by is required.')
-      return
-    }
 
     const amount = Number(capitalAmount)
     if (!Number.isFinite(amount) || amount <= 0) {
@@ -175,7 +164,7 @@ export default function ProjectDetail() {
     try {
       await addProjectCapital(id, {
         amount,
-        updated_by: updatedBy,
+        updated_by: SYSTEM_UPDATED_BY,
         note: capitalNote || null,
       })
       setCapitalAmount('')
@@ -237,7 +226,6 @@ export default function ProjectDetail() {
               value={form.project_name}
               onChange={(v) => update('project_name', v)}
             />
-            <TextField label="Updated by" value={updatedBy} onChange={setUpdatedBy} />
             <Field label="Start date">
               <input
                 type="date"
@@ -335,6 +323,10 @@ export default function ProjectDetail() {
             Calculated
           </h2>
           <dl className="space-y-3">
+            <CalcRow
+              label="Capital invested"
+              value={formatPHP(Number(form.capital_invested) || 0)}
+            />
             <CalcRow label="Total cost" value={formatPHP(financials.totalCost)} />
             <CalcRow
               label="Profit Split"
