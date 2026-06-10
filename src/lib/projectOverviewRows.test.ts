@@ -16,29 +16,32 @@ const baseProject: Project = {
   updated_at: '2026-06-07T00:00:00.000Z',
 }
 
+const today = new Date('2026-06-10T00:00:00+08:00')
+
 describe('buildProjectOverviewRows', () => {
-  it('returns formatted source and calculated values for active project rows', () => {
-    const rows = buildProjectOverviewRows([baseProject])
+  it('returns formatted source, timeline, and calculated values for active project rows', () => {
+    const rows = buildProjectOverviewRows([baseProject], today)
 
     expect(rows).toEqual([
       {
         id: 'project-1',
         projectName: 'Air Oven',
         startDate: 'Jun 7, 2026',
+        daysActive: '3',
+        expectedCompletionDate: 'Feb 7, 2027',
+        timelineStatus: 'On Track',
+        timelineTone: 'positive',
         capitalInvested: '₱85,800.00',
-        revenue: '₱160,000.00',
-        costPercentage: '10.0%',
-        splitPercentage: '50.0%',
-        totalCost: '₱16,000.00',
-        profit: '₱58,200.00',
+        projectedRevenue: '₱160,000.00',
+        profitSplit: '₱29,100.00',
         profitTone: 'positive',
         roi: '33.9%',
-        finalAmount: '₱114,900.00',
+        totalReturn: '₱114,900.00',
       },
     ])
   })
 
-  it('marks negative profit rows so the table can render loss styling', () => {
+  it('marks negative profit split rows so the table can render loss styling', () => {
     const rows = buildProjectOverviewRows([
       {
         ...baseProject,
@@ -48,19 +51,35 @@ describe('buildProjectOverviewRows', () => {
         revenue: 1000,
         cost_percentage: 100,
       },
-    ])
+    ], today)
 
     expect(rows[0]).toMatchObject({
-      profit: '-₱10,000.00',
+      profitSplit: '-₱5,000.00',
       profitTone: 'negative',
       roi: '-50.0%',
-      finalAmount: '₱5,000.00',
+      totalReturn: '₱5,000.00',
     })
   })
 
   it('uses a dash for missing start dates', () => {
-    const rows = buildProjectOverviewRows([{ ...baseProject, start_date: null }])
+    const rows = buildProjectOverviewRows([{ ...baseProject, start_date: null }], today)
 
     expect(rows[0].startDate).toBe('—')
+    expect(rows[0].daysActive).toBe('—')
+    expect(rows[0].expectedCompletionDate).toBe('—')
+    expect(rows[0].timelineStatus).toBe('No Start Date')
+  })
+
+  it('sorts rows by start date with missing dates last', () => {
+    const rows = buildProjectOverviewRows(
+      [
+        { ...baseProject, id: 'late', project_name: 'Late', start_date: '2026-03-01' },
+        { ...baseProject, id: 'missing', project_name: 'Missing', start_date: null },
+        { ...baseProject, id: 'early', project_name: 'Early', start_date: '2026-01-01' },
+      ],
+      today,
+    )
+
+    expect(rows.map((row) => row.id)).toEqual(['early', 'late', 'missing'])
   })
 })
