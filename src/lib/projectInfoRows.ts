@@ -41,7 +41,7 @@ export function buildProjectInfoRows(source: ProjectInfoSource): ProjectInfoRow[
       value: formatPHP(numberFromInput(source.capital_invested)),
     },
     {
-      label: 'Revenue',
+      label: 'Projected revenue',
       value: formatPHP(numberFromInput(source.revenue)),
     },
     {

@@ -1,7 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import type { Project, ProjectStatus } from '../types/project'
-import { getProject, updateProject, archiveProject } from '../lib/projects'
+import type { Project, ProjectAuditLog, ProjectStatus } from '../types/project'
+import {
+  addProjectCapital,
+  getProject,
+  getProjectAuditLogs,
+  updateProjectWithAudit,
+} from '../lib/projects'
 import { computeFinancials } from '../lib/calculations'
 import { formatPHP, formatPercent } from '../lib/formatters'
 import { buildProjectInfoRows } from '../lib/projectInfoRows'
@@ -41,15 +46,24 @@ export default function ProjectDetail() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [savedAt, setSavedAt] = useState<number | null>(null)
+  const [updatedBy, setUpdatedBy] = useState('')
+  const [auditLogs, setAuditLogs] = useState<ProjectAuditLog[]>([])
+  const [capitalAmount, setCapitalAmount] = useState('')
+  const [capitalNote, setCapitalNote] = useState('')
+  const [addingCapital, setAddingCapital] = useState(false)
+  const [showAddCapital, setShowAddCapital] = useState(false)
 
   useEffect(() => {
     if (!id) return
     let cancelled = false
     setLoading(true)
     setError(null)
-    getProject(id)
-      .then((p) => {
-        if (!cancelled) setForm(toFormState(p))
+    Promise.all([getProject(id), getProjectAuditLogs(id)])
+      .then(([p, logs]) => {
+        if (!cancelled) {
+          setForm(toFormState(p))
+          setAuditLogs(logs)
+        }
       })
       .catch((err) => {
         if (!cancelled) setError(err instanceof Error ? err.message : 'Failed to load')
@@ -82,22 +96,40 @@ export default function ProjectDetail() {
     setSavedAt(null)
   }
 
+  async function refreshProjectDetail() {
+    if (!id) return
+
+    const [project, logs] = await Promise.all([getProject(id), getProjectAuditLogs(id)])
+    setForm(toFormState(project))
+    setAuditLogs(logs)
+  }
+
   async function handleSave() {
     if (!id || !form) return
+    if (!updatedBy.trim()) {
+      setError('Updated by is required.')
+      return
+    }
+
     setSaving(true)
     setError(null)
     try {
-      await updateProject(id, {
-        project_name: form.project_name.trim(),
-        start_date: form.start_date || null,
-        capital_invested: Number(form.capital_invested) || 0,
-        revenue: Number(form.revenue) || 0,
-        cost_percentage: Number(form.cost_percentage) || 0,
-        split_percentage: Number(form.split_percentage) || 0,
-        notes: form.notes || null,
-        status: form.status,
-      })
+      await updateProjectWithAudit(
+        id,
+        {
+          project_name: form.project_name.trim(),
+          start_date: form.start_date || null,
+          capital_invested: Number(form.capital_invested) || 0,
+          revenue: Number(form.revenue) || 0,
+          cost_percentage: Number(form.cost_percentage) || 0,
+          split_percentage: Number(form.split_percentage) || 0,
+          notes: form.notes || null,
+          status: form.status,
+        },
+        { updated_by: updatedBy },
+      )
       await refresh()
+      await refreshProjectDetail()
       setSavedAt(Date.now())
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to save')
@@ -108,14 +140,54 @@ export default function ProjectDetail() {
 
   async function handleArchive() {
     if (!id) return
+    if (!updatedBy.trim()) {
+      setError('Updated by is required.')
+      return
+    }
+
     setSaving(true)
+    setError(null)
     try {
-      await archiveProject(id)
+      await updateProjectWithAudit(id, { status: 'archived' }, { updated_by: updatedBy })
       await refresh()
       navigate('/')
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to archive')
       setSaving(false)
+    }
+  }
+
+  async function handleAddCapital() {
+    if (!id) return
+    if (!updatedBy.trim()) {
+      setError('Updated by is required.')
+      return
+    }
+
+    const amount = Number(capitalAmount)
+    if (!Number.isFinite(amount) || amount <= 0) {
+      setError('Capital amount must be greater than 0.')
+      return
+    }
+
+    setAddingCapital(true)
+    setError(null)
+    try {
+      await addProjectCapital(id, {
+        amount,
+        updated_by: updatedBy,
+        note: capitalNote || null,
+      })
+      setCapitalAmount('')
+      setCapitalNote('')
+      setShowAddCapital(false)
+      await refresh()
+      await refreshProjectDetail()
+      setSavedAt(Date.now())
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to add capital')
+    } finally {
+      setAddingCapital(false)
     }
   }
 
@@ -165,6 +237,7 @@ export default function ProjectDetail() {
               value={form.project_name}
               onChange={(v) => update('project_name', v)}
             />
+            <TextField label="Updated by" value={updatedBy} onChange={setUpdatedBy} />
             <Field label="Start date">
               <input
                 type="date"
@@ -178,8 +251,36 @@ export default function ProjectDetail() {
               value={form.capital_invested}
               onChange={(v) => update('capital_invested', v)}
             />
+            <div>
+              <button
+                type="button"
+                onClick={() => setShowAddCapital((value) => !value)}
+                className="rounded-md border border-blue-200 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-50"
+              >
+                Add Capital
+              </button>
+
+              {showAddCapital && (
+                <div className="mt-3 space-y-3 rounded-lg border border-gray-200 bg-gray-50 p-3">
+                  <NumberField
+                    label="Additional capital (₱)"
+                    value={capitalAmount}
+                    onChange={setCapitalAmount}
+                  />
+                  <TextField label="Note" value={capitalNote} onChange={setCapitalNote} />
+                  <button
+                    type="button"
+                    onClick={handleAddCapital}
+                    disabled={addingCapital}
+                    className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {addingCapital ? 'Adding...' : 'Save Added Capital'}
+                  </button>
+                </div>
+              )}
+            </div>
             <NumberField
-              label="Revenue (₱)"
+              label="Projected revenue (₱)"
               value={form.revenue}
               onChange={(v) => update('revenue', v)}
             />
@@ -236,15 +337,14 @@ export default function ProjectDetail() {
           <dl className="space-y-3">
             <CalcRow label="Total cost" value={formatPHP(financials.totalCost)} />
             <CalcRow
-              label="Profit"
-              value={formatPHP(financials.profit)}
-              accent={financials.profit >= 0 ? 'positive' : 'negative'}
+              label="Profit Split"
+              value={formatPHP(financials.splitAmount)}
+              accent={financials.splitAmount >= 0 ? 'positive' : 'negative'}
             />
-            <CalcRow label="Split amount" value={formatPHP(financials.splitAmount)} />
             <CalcRow label="ROI" value={formatPercent(financials.roi)} />
             <div className="border-t border-gray-200 pt-3">
               <CalcRow
-                label="Final amount"
+                label="Total Return (Profit + Capital)"
                 value={formatPHP(financials.finalAmount)}
                 emphasize
               />
@@ -257,13 +357,39 @@ export default function ProjectDetail() {
         <button
           type="button"
           onClick={handleSave}
-          disabled={saving || !form.project_name.trim()}
+          disabled={saving || addingCapital || !form.project_name.trim()}
           className="w-full rounded-md bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:opacity-50 sm:w-auto"
         >
           {saving ? 'Saving…' : 'Save'}
         </button>
         {savedAt && <span className="text-sm text-green-600">Saved ✓</span>}
       </div>
+
+      <section className="mt-6 rounded-xl border border-gray-200 bg-white p-6">
+        <h2 className="mb-4 text-sm font-semibold uppercase tracking-wide text-gray-400">
+          Audit Log
+        </h2>
+        {auditLogs.length === 0 ? (
+          <p className="text-sm text-gray-400">No changes recorded yet.</p>
+        ) : (
+          <ul className="divide-y divide-gray-100">
+            {auditLogs.map((log) => (
+              <li key={log.id} className="py-3">
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-sm font-semibold text-gray-900">{log.action}</p>
+                  <p className="text-xs text-gray-400">
+                    {new Date(log.created_at).toLocaleString('en-PH')}
+                  </p>
+                </div>
+                <p className="mt-1 text-xs font-medium uppercase tracking-wide text-gray-400">
+                  {log.updated_by || 'Unknown'}
+                </p>
+                <p className="mt-1 whitespace-pre-line text-sm text-gray-600">{log.details}</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   )
 }

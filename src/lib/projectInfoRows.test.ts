@@ -18,7 +18,7 @@ describe('buildProjectInfoRows', () => {
       { label: 'Project name', value: 'Air Oven' },
       { label: 'Start date', value: 'Jun 7, 2026' },
       { label: 'Capital invested', value: '₱85,800.00' },
-      { label: 'Revenue', value: '₱160,000.00' },
+      { label: 'Projected revenue', value: '₱160,000.00' },
       { label: 'Cost percentage', value: '10.0%' },
       { label: 'Split percentage', value: '50.0%' },
       { label: 'Status', value: 'Active' },
@@ -45,7 +45,7 @@ describe('buildProjectInfoRows', () => {
     expect(rows).toContainEqual({ label: 'Project name', value: 'Untitled project' })
     expect(rows).toContainEqual({ label: 'Start date', value: '—' })
     expect(rows).toContainEqual({ label: 'Capital invested', value: '₱0.00' })
-    expect(rows).toContainEqual({ label: 'Revenue', value: '₱0.00' })
+    expect(rows).toContainEqual({ label: 'Projected revenue', value: '₱0.00' })
     expect(rows).toContainEqual({ label: 'Notes', value: '—' })
     expect(rows).toContainEqual({ label: 'Status', value: 'Archived' })
   })
