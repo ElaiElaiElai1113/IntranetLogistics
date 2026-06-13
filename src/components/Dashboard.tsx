@@ -105,6 +105,7 @@ export default function Dashboard() {
                   <thead className="bg-gray-50">
                     <tr>
                       <TableHead>Project</TableHead>
+                      <TableHead>Funding</TableHead>
                       <TableHead>Start Date</TableHead>
                       <TableHead align="right">Days Active</TableHead>
                       <TableHead>Expected Completion</TableHead>
@@ -125,6 +126,9 @@ export default function Dashboard() {
                           >
                             {row.projectName}
                           </Link>
+                        </td>
+                        <td className="whitespace-nowrap px-4 py-3">
+                          <StatusPill label={row.fundingStatus} tone={row.fundingTone} />
                         </td>
                         <TableCell>{row.startDate}</TableCell>
                         <TableCell align="right">{row.daysActive}</TableCell>
@@ -157,7 +161,12 @@ export default function Dashboard() {
                       className="block px-4 py-4 transition-colors active:bg-gray-50"
                     >
                       <div className="flex items-start justify-between gap-3">
-                        <span className="font-semibold text-blue-600">{row.projectName}</span>
+                        <div className="min-w-0">
+                          <span className="font-semibold text-blue-600">{row.projectName}</span>
+                          <div className="mt-2">
+                            <StatusPill label={row.fundingStatus} tone={row.fundingTone} />
+                          </div>
+                        </div>
                         <span className="shrink-0 text-xs text-gray-400">{row.startDate}</span>
                       </div>
                       <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-3">
