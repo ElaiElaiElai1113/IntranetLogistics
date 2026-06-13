@@ -18,6 +18,7 @@ const labels: Record<keyof ProjectPatch, string> = {
   split_percentage: 'split percentage',
   notes: 'notes',
   status: 'status',
+  funding_status: 'funding',
 }
 
 export function buildProjectUpdateDetails(project: Project, patch: ProjectPatch): string[] {

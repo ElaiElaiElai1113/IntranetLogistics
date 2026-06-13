@@ -11,9 +11,26 @@ create table if not exists projects (
   split_percentage numeric default 50,
   notes text,
   status text default 'active',
+  funding_status text,
   created_at timestamp with time zone default now(),
   updated_at timestamp with time zone default now()
 );
+
+alter table projects
+  add column if not exists funding_status text;
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_constraint
+    where conname = 'projects_funding_status_check'
+  ) then
+    alter table projects
+      add constraint projects_funding_status_check
+      check (funding_status in ('full', 'partial') or funding_status is null);
+  end if;
+end $$;
 
 -- Internal app with no auth: disable RLS so the anon key can read & write.
 -- (Supabase enables RLS by default on tables created via the dashboard UI.)
@@ -21,18 +38,39 @@ alter table projects disable row level security;
 
 -- Seed data from the client's "logistics - eli.xlsx" (10 projects, real figures).
 insert into projects
-  (project_name, start_date, capital_invested, revenue, cost_percentage, split_percentage, notes)
+  (project_name, start_date, capital_invested, revenue, cost_percentage, split_percentage, notes, funding_status)
 values
-  ('Air Oven',           '2026-01-08',  85800,  160000, 10, 50, ''),
-  ('Air Oven 2',         '2026-03-03',  86000,  160000, 10, 50, ''),
-  ('Trash Bags',         '2026-01-25', 260000,  480000, 10, 50, ''),
-  ('Steel Wool',         '2026-02-06',  70000,  150000, 10, 50, ''),
-  ('Bull Caps',          '2026-02-16', 305000,  585900, 10, 50, ''),
-  ('Vinyl Stickers',     '2026-03-18', 378420,  710400, 10, 50, ''),
-  ('Furniture',          '2026-03-18', 381700,  748000, 10, 50, ''),
-  ('Dignity Advocacy',   '2026-04-15', 389800,  783800, 10, 50, ''),
-  ('Surgical Equipment', '2026-05-15', 725000, 1554195, 10, 50, ''),
-  ('Breast Moulds',      '2026-02-25',  96000,  179000, 10, 50, '');
+  ('Air Oven',           '2026-01-08',  85800,  160000, 10, 50, '', 'full'),
+  ('Air Oven 2',         '2026-03-03',  86000,  160000, 10, 50, '', 'full'),
+  ('Trash Bags',         '2026-01-25', 260000,  480000, 10, 50, '', 'full'),
+  ('Steel Wool',         '2026-02-06',  70000,  150000, 10, 50, '', 'full'),
+  ('Bull Caps',          '2026-02-16', 305000,  585900, 10, 50, '', 'full'),
+  ('Vinyl Stickers',     '2026-03-18', 378420,  710400, 10, 50, '', 'full'),
+  ('Furniture',          '2026-03-18', 381700,  748000, 10, 50, '', 'full'),
+  ('Dignity Advocacy',   '2026-04-15', 389800,  783800, 10, 50, '', 'full'),
+  ('Surgical Equipment', '2026-05-15', 725000, 1554195, 10, 50, '', 'full'),
+  ('Breast Moulds',      '2026-02-25',  96000,  179000, 10, 50, '', 'full');
+
+update projects
+set funding_status = 'partial'
+where project_name = 'Probes'
+  and funding_status is null;
+
+update projects
+set funding_status = 'full'
+where project_name in (
+  'Air Oven',
+  'Air Oven 2',
+  'Trash Bags',
+  'Steel Wool',
+  'Bull Caps',
+  'Vinyl Stickers',
+  'Furniture',
+  'Dignity Advocacy',
+  'Surgical Equipment',
+  'Breast Moulds'
+)
+  and funding_status is null;
 
 create table if not exists project_capital_entries (
   id uuid primary key default gen_random_uuid(),

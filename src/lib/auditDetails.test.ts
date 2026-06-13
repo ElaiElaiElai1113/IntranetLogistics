@@ -12,6 +12,7 @@ const project: Project = {
   split_percentage: 50,
   notes: null,
   status: 'active',
+  funding_status: 'partial',
   created_at: '2026-01-08T00:00:00.000Z',
   updated_at: '2026-06-10T00:00:00.000Z',
 }

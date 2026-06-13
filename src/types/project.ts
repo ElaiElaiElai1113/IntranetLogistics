@@ -1,4 +1,5 @@
 export type ProjectStatus = 'active' | 'archived'
+export type FundingStatus = 'full' | 'partial'
 
 export interface Project {
   id: string
@@ -10,6 +11,7 @@ export interface Project {
   split_percentage: number
   notes: string | null
   status: ProjectStatus
+  funding_status: FundingStatus | null
   created_at: string
   updated_at: string
 }
@@ -23,6 +25,7 @@ export interface ProjectInput {
   cost_percentage?: number
   split_percentage?: number
   notes?: string | null
+  funding_status?: FundingStatus | null
 }
 
 /** Editable subset of a project (everything except calculated/system fields). */
@@ -37,6 +40,7 @@ export type ProjectPatch = Partial<
     | 'split_percentage'
     | 'notes'
     | 'status'
+    | 'funding_status'
   >
 >
 
