@@ -8,10 +8,14 @@ import {
   type TimelineTone,
 } from './projectTimeline'
 
+type FundingTone = 'positive' | 'warning' | 'muted'
+
 export interface ProjectOverviewRow {
   id: string
   projectName: string
   startDate: string
+  fundingStatus: string
+  fundingTone: FundingTone
   daysActive: string
   expectedCompletionDate: string
   timelineStatus: string
@@ -21,6 +25,15 @@ export interface ProjectOverviewRow {
   profitSplit: string
   profitTone: 'positive' | 'negative'
   roi: string
+}
+
+function getFundingDisplay(status: Project['funding_status']): {
+  label: string
+  tone: FundingTone
+} {
+  if (status === 'full') return { label: 'Full', tone: 'positive' }
+  if (status === 'partial') return { label: 'Partial', tone: 'warning' }
+  return { label: '-', tone: 'muted' }
 }
 
 function sortByStartDate(projects: Project[]): Project[] {
@@ -42,11 +55,14 @@ export function buildProjectOverviewRows(
     const daysActive = calculateDaysActive(project.start_date, today)
     const expectedCompletionDate = addExpectedProjectMonths(project.start_date)
     const timeline = getProjectTimelineStatus(project.start_date, today)
+    const funding = getFundingDisplay(project.funding_status)
 
     return {
       id: project.id,
       projectName: project.project_name,
       startDate: formatDate(project.start_date),
+      fundingStatus: funding.label,
+      fundingTone: funding.tone,
       daysActive: daysActive === null ? '—' : String(daysActive),
       expectedCompletionDate: formatDate(expectedCompletionDate),
       timelineStatus: timeline.label,

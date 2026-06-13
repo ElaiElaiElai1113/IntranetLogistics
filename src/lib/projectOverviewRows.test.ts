@@ -28,6 +28,8 @@ describe('buildProjectOverviewRows', () => {
         id: 'project-1',
         projectName: 'Air Oven',
         startDate: 'Jun 7, 2026',
+        fundingStatus: 'Full',
+        fundingTone: 'positive',
         daysActive: '3',
         expectedCompletionDate: 'Feb 7, 2027',
         timelineStatus: 'On Track',
@@ -57,6 +59,57 @@ describe('buildProjectOverviewRows', () => {
       profitSplit: '-₱5,000.00',
       profitTone: 'negative',
       roi: '-50.0%',
+    })
+  })
+
+  it('formats partial funding with warning tone', () => {
+    const rows = buildProjectOverviewRows(
+      [
+        {
+          ...baseProject,
+          funding_status: 'partial',
+        },
+      ],
+      today,
+    )
+
+    expect(rows[0]).toMatchObject({
+      fundingStatus: 'Partial',
+      fundingTone: 'warning',
+    })
+  })
+
+  it('formats unset funding with muted tone', () => {
+    const rows = buildProjectOverviewRows(
+      [
+        {
+          ...baseProject,
+          funding_status: null,
+        },
+      ],
+      today,
+    )
+
+    expect(rows[0]).toMatchObject({
+      fundingStatus: '-',
+      fundingTone: 'muted',
+    })
+  })
+
+  it('treats unexpected funding values as unset display values', () => {
+    const rows = buildProjectOverviewRows(
+      [
+        {
+          ...baseProject,
+          funding_status: 'unknown' as Project['funding_status'],
+        },
+      ],
+      today,
+    )
+
+    expect(rows[0]).toMatchObject({
+      fundingStatus: '-',
+      fundingTone: 'muted',
     })
   })
 
