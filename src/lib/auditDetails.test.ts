@@ -33,4 +33,24 @@ describe('buildProjectUpdateDetails', () => {
   it('returns no details when values do not change', () => {
     expect(buildProjectUpdateDetails(project, { revenue: 160000 })).toEqual([])
   })
+
+  it('describes funding status changes', () => {
+    expect(buildProjectUpdateDetails(project, { funding_status: 'full' })).toEqual([
+      'Changed funding from Partial to Full',
+    ])
+
+    expect(
+      buildProjectUpdateDetails(
+        {
+          ...project,
+          funding_status: null,
+        },
+        { funding_status: 'partial' },
+      ),
+    ).toEqual(['Changed funding from Unset to Partial'])
+
+    expect(buildProjectUpdateDetails(project, { funding_status: null })).toEqual([
+      'Changed funding from Partial to Unset',
+    ])
+  })
 })

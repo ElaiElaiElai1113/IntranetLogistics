@@ -1,8 +1,14 @@
-import type { Project, ProjectPatch, ProjectStatus } from '../types/project'
+import type { FundingStatus, Project, ProjectPatch, ProjectStatus } from '../types/project'
 import { formatDate, formatPHP, formatPercent } from './formatters'
 
 function statusLabel(status: ProjectStatus): string {
   return status === 'active' ? 'Active' : 'Archived'
+}
+
+function fundingStatusLabel(status: FundingStatus | null | undefined): string {
+  if (status === 'full') return 'Full'
+  if (status === 'partial') return 'Partial'
+  return 'Unset'
 }
 
 function normalizeText(value: string | null | undefined): string {
@@ -55,6 +61,14 @@ export function buildProjectUpdateDetails(project: Project, patch: ProjectPatch)
         `Changed status from ${statusLabel(current as ProjectStatus)} to ${statusLabel(
           next as ProjectStatus,
         )}`,
+      ]
+    }
+
+    if (key === 'funding_status') {
+      return [
+        `Changed funding from ${fundingStatusLabel(
+          current as FundingStatus | null,
+        )} to ${fundingStatusLabel(next as FundingStatus | null)}`,
       ]
     }
 
