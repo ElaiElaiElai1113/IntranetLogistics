@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import type { Project, ProjectAuditLog, ProjectStatus } from '../types/project'
+import type { FundingStatus, Project, ProjectAuditLog, ProjectStatus } from '../types/project'
 import {
   addProjectCapital,
   getProject,
@@ -21,6 +21,7 @@ interface FormState {
   split_percentage: string
   notes: string
   status: ProjectStatus
+  funding_status: FundingStatus | ''
 }
 
 const SYSTEM_UPDATED_BY = 'System'
@@ -35,6 +36,7 @@ function toFormState(p: Project): FormState {
     split_percentage: String(p.split_percentage),
     notes: p.notes ?? '',
     status: p.status,
+    funding_status: p.funding_status ?? '',
   }
 }
 
@@ -122,6 +124,7 @@ export default function ProjectDetail() {
           split_percentage: Number(form.split_percentage) || 0,
           notes: form.notes || null,
           status: form.status,
+          funding_status: form.funding_status || null,
         },
         { updated_by: SYSTEM_UPDATED_BY },
       )
@@ -226,6 +229,17 @@ export default function ProjectDetail() {
               value={form.project_name}
               onChange={(v) => update('project_name', v)}
             />
+            <Field label="Funding">
+              <select
+                value={form.funding_status}
+                onChange={(e) => update('funding_status', e.target.value as FundingStatus | '')}
+                className={inputClass}
+              >
+                <option value="">Unset</option>
+                <option value="full">Full</option>
+                <option value="partial">Partial</option>
+              </select>
+            </Field>
             <Field label="Start date">
               <input
                 type="date"

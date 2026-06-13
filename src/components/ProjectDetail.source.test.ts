@@ -16,4 +16,12 @@ describe('ProjectDetail source', () => {
     expect(totalCostRow).toBeGreaterThan(-1)
     expect(capitalRow).toBeLessThan(totalCostRow)
   })
+
+  it('includes a funding selector with unset, full, and partial options', () => {
+    expect(source).toContain('<Field label="Funding">')
+    expect(source).toContain('<option value="">Unset</option>')
+    expect(source).toContain('<option value="full">Full</option>')
+    expect(source).toContain('<option value="partial">Partial</option>')
+    expect(source).toContain('funding_status: form.funding_status || null')
+  })
 })
